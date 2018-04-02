@@ -27,11 +27,11 @@ void edgedetect::process() {
     changeToGray();
     blur();
     contourDetect();
-    transform();
-    selectLine();
-    transBack();
-    displayLine();
-    displayCorner();
+    transToHoughSpace();
+    selectLineInHoughSpace();
+    transBackToOriginSpace();
+    findIntersections();
+    displayLinesAndCorners();
     warpped = warp();
 }
 
@@ -53,7 +53,7 @@ void edgedetect::debug() {
     cv::imshow("Warp", warpped);
 }
 
-bool edgedetect::houghPixelSort(houghpixel &a, houghpixel &b) {
+bool edgedetect::cmp_houghPixelSort(houghpixel &a, houghpixel &b) {
     return (a.val >= b.val);
 }
 
@@ -68,6 +68,7 @@ float edgedetect::houghDistance(houghpixel a, houghpixel b) {
 void edgedetect::changeToGray() {
     cv::cvtColor(src, gray_image, CV_RGB2GRAY);
     cv::cvtColor(hough_space, hough_space, CV_RGB2GRAY);
+    // Contruct a copy of hough space using for debug.
     hough_test = hough_space.clone();
 }
 
@@ -92,7 +93,7 @@ void edgedetect::contourDetect() {
     cv::addWeighted(abs_dx, 0.5, abs_dy, 0.5, 0, contour);
 }
 
-void edgedetect::transform() {
+void edgedetect::transToHoughSpace() {
     // Go through all the pixels.
     for (int i = 1; i < contour.rows; i++) {
         for (int j = 1; j < contour.cols; j++) {
@@ -116,7 +117,7 @@ void edgedetect::transform() {
     }
 }
 
-void edgedetect::selectLine() {
+void edgedetect::selectLineInHoughSpace() {
     // Construct a vector to store the nominated pixels.
     std::vector<houghpixel> pixels;
     for (int i = 1; i < hough_space.rows; i++) {
@@ -127,12 +128,14 @@ void edgedetect::selectLine() {
                 pixel.theta = j;
                 pixel.val = hough_space.at<uchar>(i, j);
                 pixels.push_back(pixel);
+            } else {
+                hough_space.at<uchar>(i, j) = 0;
             }
         }
     }
 
     // Sort the pixels based on the brightness.
-    std::sort(pixels.begin(), pixels.end(), houghPixelSort);
+    std::sort(pixels.begin(), pixels.end(), cmp_houghPixelSort);
 
     // Select four most possible lines.
 
@@ -144,69 +147,96 @@ void edgedetect::selectLine() {
     houghlines.push_back(pixels.front());
     int count = 1;
     for (unsigned int i = 1; i < pixels.size(); i++) {
-        bool test = true;
+        bool good_point = true;
         for (unsigned int j = 0; j < houghlines.size(); j++) {
             // Test whether two lines are too close.
             // TODO: Iteratively select the LINE_DISTANCE.
             if (houghDistance(pixels[i], houghlines[j]) < LINE_DISTANCE) {
-                test = false;
+                good_point = false;
                 break;
             }
         }
-        if (test == true) {
+        if (good_point == true) {
             houghlines.push_back(pixels[i]);
             count += 1;
         }
         if (count == 4) {break;}
     }
 
-    // Test code, show the selected four lines.
+    // Show the selected four lines in hough_test space.
     for (unsigned int i = 0; i < houghlines.size(); i++) {
         hough_test.at<uchar>(houghlines[i].rho, houghlines[i].theta)
                 += houghlines[i].val;
     }
 }
 
-void edgedetect::transBack() {
-    // Transfer the point in houghspace to original image space.
+// NOTE: Up to now, the exact four lines has been determined.
+
+void edgedetect::transBackToOriginSpace() {
+    // Transfer the point in houghspace back to original image space.
     for (unsigned int i = 0; i < houghlines.size(); i++) {
-        float m = -cos(CV_PI / 180 * (houghlines[i].theta - 180)) /
-                  sin(CV_PI / 180 * (houghlines[i].theta - 180));
-        float b = houghlines[i].rho / sin(CV_PI / 180 * (houghlines[i].theta - 180));
-        line l;
-        l.m = m;
-        l.b = b;
-        lines.push_back(l);
+        if (houghlines[i].theta == 0 || houghlines[i].theta == 180 || houghlines[i].theta == 360) {
+            line l;
+            l.c = houghlines[i].rho + 1;
+            lines.push_back(l);
+        } else {
+            float m = -cos(CV_PI / 180 * (houghlines[i].theta - 180)) /
+                      sin(CV_PI / 180 * (houghlines[i].theta - 180));
+            float b = houghlines[i].rho / sin(CV_PI / 180 * (houghlines[i].theta - 180));
+            line l;
+            l.m = m;
+            l.b = b;
+            l.c = 0;
+            lines.push_back(l);
+        }
     }
 }
 
-void edgedetect::displayLine() {
-    // BUG: Cannot dealing with vertical lines
-    for (unsigned int i = 0; i < lines.size(); i++) {
-        cv::line(src, cv::Point2f(0, lines[i].b),
-                 cv::Point2f(src.rows, src.rows * lines[i].m + lines[i].b),
-                 cv::Scalar(90, 90, 90), 3);
-    }
-}
-
-void edgedetect::displayCorner() {
+void edgedetect::findIntersections() {
     // Find the four intersections.
-
-    /* TODO: Algorithm is need to select exactly four correct corners.
-     * The four point should be within the image.
-     */
-
     for (unsigned int i = 0; i < lines.size(); i++) {
         for (unsigned int j = i + 1; j <= lines.size(); j++) {
-            float x = (lines[i].b - lines[j].b) / (lines[j].m - lines[i].m);
-            float y = lines[i].m * x + lines[i].b;
-            cv::Point2f p(x, y);
-            if (x > 10 && x < src.cols - 10 && y > 10 && y < src.rows - 10) {
-                corners.push_back(p);
+            if (lines[i].c == 0 && lines[j].c == 0) {
+                float x = (lines[i].b - lines[j].b) / (lines[j].m - lines[i].m);
+                float y = lines[i].m * x + lines[i].b;
+                cv::Point2f p(x, y);
+                if (x > 10 && x < src.cols - 10 && y > 10 && y < src.rows - 10) {
+                    corners.push_back(p);
+                }
+            } else if (lines[i].c != 0 && lines[j].c == 0) {
+                float x = lines[i].c;
+                float y = lines[j].m * x + lines[j].b;
+                cv::Point2f p(x, y);
+                if (x > 10 && x < src.cols - 10 && y > 10 && y < src.rows - 10) {
+                    corners.push_back(p);
+                }
+            } else if (lines[i].c == 0 && lines[j].c != 0) {
+                float x = lines[j].c;
+                float y = lines[i].m * x + lines[i].b;
+                cv::Point2f p(x, y);
+                if (x > 10 && x < src.cols - 10 && y > 10 && y < src.rows - 10) {
+                    corners.push_back(p);
+                }
+            } else {
+                break;
             }
         }
     }
+}
 
+void edgedetect::displayLinesAndCorners() {
+    // Display the four lines.
+    for (unsigned int i = 0; i < lines.size(); i++) {
+        if (lines[i].c != 0) {
+            cv::line(src, cv::Point2f(lines[i].c, 0),
+                     cv::Point2f(lines[i].c, src.rows),
+                     cv::Scalar(90, 90, 90), 1);
+        } else {
+            cv::line(src, cv::Point2f(0, lines[i].b),
+                     cv::Point2f(src.rows, src.rows * lines[i].m + lines[i].b),
+                     cv::Scalar(90, 90, 90), 1);
+        }
+    }
     // Display the four intersection.
     for (unsigned int i = 0; i < corners.size(); i++) {
         cv::circle(src, corners[i], 1, cv::Scalar(255, 0, 0), 5);
@@ -240,15 +270,27 @@ cv::Mat edgedetect::warp() {
         }
     }
 
-    // TODO: Design the size of the warpped image.
+    // Calculate the size of the warpped image.
+    int height;
+    int width;
+    int h1 = sqrt(pow(abs(sort_corner[0].x - sort_corner[2].x), 2) +
+            pow(abs(sort_corner[0].y - sort_corner[2].y), 2));
+    int h2 = sqrt(pow(abs(sort_corner[1].x - sort_corner[3].x), 2) +
+            pow(abs(sort_corner[1].y - sort_corner[3].y), 2));
+    height = MAX(h1, h2);
+    int w1 = sqrt(pow(abs(sort_corner[0].x - sort_corner[1].x), 2) +
+            pow(abs(sort_corner[0].y - sort_corner[1].y), 2));
+    int w2 = sqrt(pow(abs(sort_corner[2].x - sort_corner[3].x), 2) +
+            pow(abs(sort_corner[2].y - sort_corner[3].y), 2));
+    width = MAX(w1, w2);
 
     //Warp the image.
-    cv::Mat new_image = cv::Mat::zeros(700, 500, CV_8UC3);
+    cv::Mat new_image = cv::Mat::zeros(2*height, 2*width, CV_8UC3);
     std::vector<cv::Point2f> new_corners;
     new_corners.push_back(cv::Point2f(0, 0));
-    new_corners.push_back(cv::Point2f(500, 0));
-    new_corners.push_back(cv::Point2f(0, 700));
-    new_corners.push_back(cv::Point2f(500, 700));
+    new_corners.push_back(cv::Point2f(2*width, 0));
+    new_corners.push_back(cv::Point2f(0, 2*height));
+    new_corners.push_back(cv::Point2f(2*width, 2*height));
 
     cv::Mat transmtx = cv::getPerspectiveTransform(sort_corner, new_corners);
     cv::warpPerspective(src, new_image, transmtx, new_image.size());

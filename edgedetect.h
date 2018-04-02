@@ -15,8 +15,9 @@ struct houghpixel {
 };
 
 struct line {
-    float m;
-    float b;
+    float m; // The slope of the line.
+    float b; // The intersection with y axis.
+    float c; // If line is verticle, x = c.
 };
 
 class edgedetect
@@ -44,17 +45,18 @@ public:
     void debug();
     float distance(float x, float y);
     float houghDistance(houghpixel a, houghpixel b);
+
     void changeToGray();
     void blur();
     void contourDetect();
-    void transform();
-    void selectLine();
-    void transBack();
-    void displayLine();
-    void displayCorner();
+    void transToHoughSpace();
+    void selectLineInHoughSpace();
+    void transBackToOriginSpace();
+    void findIntersections();
+    void displayLinesAndCorners();
     cv::Mat warp();
 
-    static bool houghPixelSort(houghpixel &a, houghpixel &b);
+    static bool cmp_houghPixelSort(houghpixel &a, houghpixel &b);
 };
 
 #endif // EDGEDETECT_H
