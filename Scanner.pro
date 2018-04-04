@@ -35,11 +35,11 @@ HEADERS += \
 FORMS += \
         mainwindow.ui
 
-INCLUDEPATH += D:\opencv-3.4.1\opencv\build\include
+INCLUDEPATH += D:\Opencv\opencv\build\include
 
-LIBS += D:\opencv-3.4.1\build\bin\libopencv_core341.dll
-LIBS += D:\opencv-3.4.1\build\bin\libopencv_highgui341.dll
-LIBS += D:\opencv-3.4.1\build\bin\libopencv_imgcodecs341.dll
-LIBS += D:\opencv-3.4.1\build\bin\libopencv_imgproc341.dll
-LIBS += D:\opencv-3.4.1\build\bin\libopencv_features2d341.dll
-LIBS += D:\opencv-3.4.1\build\bin\libopencv_calib3d341.dll
+LIBS += D:\Opencv\opencv_build\bin\libopencv_core341.dll
+LIBS += D:\Opencv\opencv_build\bin\libopencv_highgui341.dll
+LIBS += D:\Opencv\opencv_build\bin\libopencv_imgcodecs341.dll
+LIBS += D:\Opencv\opencv_build\bin\libopencv_imgproc341.dll
+LIBS += D:\Opencv\opencv_build\bin\libopencv_features2d341.dll
+LIBS += D:\Opencv\opencv_build\bin\libopencv_calib3d341.dll
