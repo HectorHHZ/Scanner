@@ -91,6 +91,7 @@ void edgedetect::contourDetect() {
 
     // Combine the gradients together.
     cv::addWeighted(abs_dx, 0.5, abs_dy, 0.5, 0, contour);
+
 }
 
 void edgedetect::transToHoughSpace() {
@@ -195,26 +196,26 @@ void edgedetect::transBackToOriginSpace() {
 void edgedetect::findIntersections() {
     // Find the four intersections.
     for (unsigned int i = 0; i < lines.size(); i++) {
-        for (unsigned int j = i + 1; j <= lines.size(); j++) {
+        for (unsigned int j = i + 1; j < lines.size(); j++) {
             if (lines[i].c == 0 && lines[j].c == 0) {
                 float x = (lines[i].b - lines[j].b) / (lines[j].m - lines[i].m);
                 float y = lines[i].m * x + lines[i].b;
-                cv::Point2f p(x, y);
-                if (x > 10 && x < src.cols - 10 && y > 10 && y < src.rows - 10) {
+                if (x > 0 && x < src.cols && y > 0 && y < src.rows) {
+                    cv::Point2f p(x, y);
                     corners.push_back(p);
                 }
             } else if (lines[i].c != 0 && lines[j].c == 0) {
                 float x = lines[i].c;
                 float y = lines[j].m * x + lines[j].b;
-                cv::Point2f p(x, y);
-                if (x > 10 && x < src.cols - 10 && y > 10 && y < src.rows - 10) {
+                if (x > 0 && x < src.cols && y > 0 && y < src.rows) {
+                    cv::Point2f p(x, y);
                     corners.push_back(p);
                 }
             } else if (lines[i].c == 0 && lines[j].c != 0) {
                 float x = lines[j].c;
                 float y = lines[i].m * x + lines[i].b;
-                cv::Point2f p(x, y);
-                if (x > 10 && x < src.cols - 10 && y > 10 && y < src.rows - 10) {
+                if (x > 0 && x < src.cols && y > 0 && y < src.rows) {
+                    cv::Point2f p(x, y);
                     corners.push_back(p);
                 }
             } else {
@@ -233,7 +234,7 @@ void edgedetect::displayLinesAndCorners() {
                      cv::Scalar(90, 90, 90), 1);
         } else {
             cv::line(src, cv::Point2f(0, lines[i].b),
-                     cv::Point2f(src.rows, src.rows * lines[i].m + lines[i].b),
+                     cv::Point2f(src.cols, src.cols * lines[i].m + lines[i].b),
                      cv::Scalar(90, 90, 90), 1);
         }
     }

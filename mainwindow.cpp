@@ -11,7 +11,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    edgedetect image("C:\\Users\\Leon\\Desktop\\c++data\\15.jpg");
+    edgedetect image("C:\\Users\\Leon\\Desktop\\c++data\\1.bmp");
     image.debug();
 }
 
