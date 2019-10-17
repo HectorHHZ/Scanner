@@ -5,6 +5,7 @@
 #-------------------------------------------------
 
 QT       += core gui
+QT       += printsupport
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -25,21 +26,41 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
         main.cpp \
-        mainwindow.cpp \
-    edgedetect.cpp
+    edgedetect.cpp \
+    choosefile.cpp \
+    processimage.cpp \
+    paintimagewidget.cpp \
+    magnifyimagewidget.cpp \
+    mainwidget.cpp \
+    filterprocess.cpp \
+    startinterface.cpp \
+    filter.cpp
 
 HEADERS += \
-        mainwindow.h \
-    edgedetect.h
+    edgedetect.h \
+    choosefile.h \
+    processimage.h \
+    paintimagewidget.h \
+    magnifyimagewidget.h \
+    mainwidget.h \
+    filterprocess.h \
+    startinterface.h \
+    filter.h
 
 FORMS += \
-        mainwindow.ui
+    choosefile.ui \
+    processimage.ui \
+    filterprocess.ui \
+    startinterface.ui
+
 
 INCLUDEPATH += D:\Opencv\opencv\build\include
-
 LIBS += D:\Opencv\opencv_build\bin\libopencv_core341.dll
 LIBS += D:\Opencv\opencv_build\bin\libopencv_highgui341.dll
 LIBS += D:\Opencv\opencv_build\bin\libopencv_imgcodecs341.dll
 LIBS += D:\Opencv\opencv_build\bin\libopencv_imgproc341.dll
 LIBS += D:\Opencv\opencv_build\bin\libopencv_features2d341.dll
 LIBS += D:\Opencv\opencv_build\bin\libopencv_calib3d341.dll
+
+RESOURCES += \
+    resources.qrc

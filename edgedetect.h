@@ -7,6 +7,7 @@
 
 #include <math.h>
 #include <algorithm>
+#include <iostream>
 
 struct houghpixel {
     int rho;
@@ -23,40 +24,42 @@ struct line {
 class edgedetect
 {
 public:
+    edgedetect(std::string filepath);
+
+    cv::Point2f top_left_corner;
+    cv::Point2f top_right_corner;
+    cv::Point2f bottom_left_corner;
+    cv::Point2f bottom_right_corner;
+
+    void debug();
+    void process();
+
+private:
     cv::Mat src;
     cv::Mat gray_image;
     cv::Mat blur_image;
     cv::Mat contour;
     cv::Mat hough_space;
     cv::Mat hough_test;
-    cv::Mat warpped;
     std::vector<houghpixel> houghlines;
     std::vector<line> lines;
     std::vector<cv::Point2f> corners;
 
-    cv::Size Gaussiansize;
-    int GRAD_THRESHOLD;
-    int HOUGH_THRESHOLD;
-    int LINE_DISTANCE;
+    const int Gaussiansize = 13;
+    const int GRAD_THRESHOLD = 50;
+    const int HOUGH_THRESHOLD = 100;
+    const int LINE_DISTANCE = 75;
 
-    edgedetect(std::string filepath);
-
-    void process();
-    void debug();
-    float distance(float x, float y);
     float houghDistance(houghpixel a, houghpixel b);
 
-    void changeToGray();
-    void blur();
+    void preprocess();
     void contourDetect();
     void transToHoughSpace();
-    void selectLineInHoughSpace();
+    bool selectLineInHoughSpace();
     void transBackToOriginSpace();
     void findIntersections();
     void displayLinesAndCorners();
-    cv::Mat warp();
-
-    static bool cmp_houghPixelSort(houghpixel &a, houghpixel &b);
+    void sortCorners();
 };
 
 #endif // EDGEDETECT_H

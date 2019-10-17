@@ -1,0 +1,16 @@
+<RCC>
+    <qresource prefix="/new/image">
+        <file>resource/magnifyIcon.png</file>
+        <file>resource/logo.png</file>
+        <file>resource/browse.png</file>
+        <file>resource/next.png</file>
+        <file>resource/back.png</file>
+        <file>resource/check.png</file>
+        <file>resource/save.png</file>
+        <file>resource/startbackground.jpg</file>
+        <file>resource/rotate180.png</file>
+        <file>resource/filterone.png</file>
+        <file>resource/backup.png</file>
+        <file>resource/filterone2.png</file>
+    </qresource>
+</RCC>
