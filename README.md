@@ -11,5 +11,5 @@ two algorithms which can enhance the handwriting of the scanned paper. Finally, 
 the scanned document into a single pdf form. In addition to the main function of our project, 
 I pay a lot effort to make this product more user friendly because our primary goal is to make students submit their homework easier.
 
-This repository contains all of the code. If you want to see the integral application directly, 
+This repository contains all of the code. If you want to see the integral application, 
 you can go to another repository and download the ZIP file directly.
